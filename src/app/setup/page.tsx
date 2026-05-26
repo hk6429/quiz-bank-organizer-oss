@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,12 +55,34 @@ export default function SetupPage() {
         這是 OSS demo。所有 key 只存在你的瀏覽器分頁記憶體（sessionStorage），
         <strong className="text-foreground">關掉分頁就消失</strong>，不會送到任何伺服器永久保存。
       </p>
+      <div className="mt-4">
+        <Link
+          href="/how-to"
+          className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
+        >
+          📘 第一次來？看完整教學（15–20 分鐘）→
+        </Link>
+      </div>
 
       <Card className="card-tech mt-6 p-6">
         <form onSubmit={save} className="space-y-5">
           <Section
             label="① Google Sheets Apps Script URL"
-            hint="你部署的 Apps Script Web App URL，看 GitHub README 的 apps-script/SETUP.md"
+            hint={
+              <>
+                你部署的 Apps Script Web App URL。沒有？
+                <Link href="/how-to#step-2" className="ml-1 text-primary underline">教我做一個 →</Link>
+                {" · "}
+                <a
+                  href="https://script.google.com/home"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline"
+                >
+                  開 script.google.com ↗
+                </a>
+              </>
+            }
             ok={status.sheets}
           >
             <Input
@@ -73,7 +96,13 @@ export default function SetupPage() {
 
           <Section
             label="② Sheets API Secret"
-            hint="你自己用 openssl rand -hex 32 產的 64-char 隨機字串，跟 Apps Script Script Property 一致"
+            hint={
+              <>
+                你自己用 <code className="rounded bg-muted/40 px-1 font-mono text-[10px]">openssl rand -hex 32</code> 產的 64 字元字串，
+                跟 Apps Script Script Property 一致。
+                <Link href="/how-to#step-4" className="ml-1 text-primary underline">教我產一個 →</Link>
+              </>
+            }
             ok={status.sheets}
           >
             <Input
@@ -96,9 +125,10 @@ export default function SetupPage() {
                   rel="noopener noreferrer"
                   className="text-primary underline"
                 >
-                  aistudio.google.com/apikey
+                  aistudio.google.com/apikey ↗
                 </a>{" "}
-                免費取得（每日 1500 次 quota）
+                免費取得（每日 1500 次 quota）。
+                <Link href="/how-to#step-1" className="ml-1 text-primary underline">教我拿 →</Link>
               </>
             }
             ok={status.gemini}
