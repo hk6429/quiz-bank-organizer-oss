@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { getByok, hasSheets, hasGemini } from "@/lib/byok";
 
 const ITEMS = [
   { href: "/questions", label: "題庫" },
@@ -13,6 +15,20 @@ const ITEMS = [
 
 export function NavBar() {
   const pathname = usePathname();
+  const [configured, setConfigured] = useState<{ sheets: boolean; gemini: boolean } | null>(null);
+
+  useEffect(() => {
+    const update = () => {
+      const c = getByok();
+      setConfigured({ sheets: hasSheets(c), gemini: hasGemini(c) });
+    };
+    update();
+    const onFocus = () => update();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [pathname]);
+
+  const ready = configured?.sheets && configured?.gemini;
 
   return (
     <nav className="sticky top-0 z-40 border-b border-border/50 bg-background/60 backdrop-blur-xl print:hidden">
@@ -47,11 +63,31 @@ export function NavBar() {
             );
           })}
         </div>
+        <Link
+          href="/setup"
+          className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider transition-colors ${
+            pathname === "/setup"
+              ? "border-primary/60 text-primary"
+              : "border-border/60 text-muted-foreground hover:border-primary/50 hover:text-primary"
+          }`}
+          title="API 設定"
+        >
+          <span
+            className={`inline-block size-1.5 rounded-full ${
+              configured === null
+                ? "bg-muted-foreground/40"
+                : ready
+                  ? "bg-primary animate-pulse"
+                  : "bg-destructive animate-pulse"
+            }`}
+          />
+          ⚙ Setup
+        </Link>
         <a
           href="https://github.com/hk6429/quiz-bank-organizer-oss"
           target="_blank"
           rel="noopener noreferrer"
-          className="rounded-md border border-border/60 px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
+          className="hidden rounded-md border border-border/60 px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary sm:inline-block"
           title="GitHub"
         >
           ★ GitHub

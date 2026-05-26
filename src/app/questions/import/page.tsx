@@ -45,9 +45,10 @@ export default function ImportPage() {
     setErr("");
     setStage("parsing");
     try {
+      const { byokHeaders } = await import("@/lib/byok");
       const res = await fetch("/api/gemini", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...byokHeaders() },
         body: JSON.stringify({
           action: "parse_raw",
           payload: {

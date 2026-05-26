@@ -1,4 +1,5 @@
 import { Question, QuestionDraft } from "./schemas";
+import { byokHeaders } from "./byok";
 
 type ApiResponse<T> =
   | { ok: true; data: T }
@@ -16,7 +17,10 @@ async function call<T>(
   }
   const res = await fetch(url.toString(), {
     method: body ? "POST" : "GET",
-    headers: body ? { "Content-Type": "application/json" } : undefined,
+    headers: {
+      ...byokHeaders(),
+      ...(body ? { "Content-Type": "application/json" } : {}),
+    },
     body: body ? JSON.stringify(body) : undefined,
   });
   const json = (await res.json()) as ApiResponse<T>;

@@ -115,9 +115,10 @@ function QuestionStatRow({ stat, index, totalN }: { stat: QStat; index: number; 
     if (!stat.distractor_dist || Object.keys(stat.distractor_dist).length === 0) return;
     setAiBusy(true);
     try {
+      const { byokHeaders } = await import("@/lib/byok");
       const res = await fetch("/api/gemini", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...byokHeaders() },
         body: JSON.stringify({
           action: "detect_misconception",
           payload: {

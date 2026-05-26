@@ -1,15 +1,13 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Question, QuestionDraft } from "./schemas";
 
-const apiKey = process.env.GEMINI_API_KEY;
 const FAST = process.env.GEMINI_MODEL_FAST || "gemini-2.5-flash";
 const PRO = process.env.GEMINI_MODEL_PRO || "gemini-2.5-pro";
 
-let _client: GoogleGenAI | null = null;
-function client() {
-  if (!apiKey) throw new Error("GEMINI_API_KEY not configured");
-  if (!_client) _client = new GoogleGenAI({ apiKey });
-  return _client;
+function client(apiKey?: string) {
+  const key = apiKey || process.env.GEMINI_API_KEY;
+  if (!key) throw new Error("GEMINI_API_KEY not configured (BYOK: pass apiKey arg)");
+  return new GoogleGenAI({ apiKey: key });
 }
 
 const QuestionSchema = {
@@ -35,6 +33,7 @@ const QuestionSchema = {
 export async function parseRawText(
   rawText: string,
   context: { subject: string; grade: string; units: string[] },
+  apiKey?: string,
 ): Promise<Partial<QuestionDraft>[]> {
   const prompt = `你是國中題庫整理助理。將下列原文拆解成題目，每題一個 JSON 物件，整體回傳為 JSON 陣列。
 
@@ -54,7 +53,7 @@ ${rawText}
 
 回傳純 JSON 陣列。`;
 
-  const res = await client().models.generateContent({
+  const res = await client(apiKey).models.generateContent({
     model: FAST,
     contents: prompt,
     config: {
@@ -69,6 +68,7 @@ ${rawText}
 export async function autoTag(
   question: Pick<Question, "stem" | "options" | "answer" | "subject" | "grade">,
   unitTree: string[],
+  apiKey?: string,
 ): Promise<Partial<Pick<Question, "unit" | "subconcept" | "difficulty" | "bloom" | "tags">>> {
   const prompt = `判斷以下題目應該屬於哪個單元、子概念、難度、認知層次、標籤。
 
@@ -80,7 +80,7 @@ ${unitTree.join("\n")}
 
 回傳 JSON。`;
 
-  const res = await client().models.generateContent({
+  const res = await client(apiKey).models.generateContent({
     model: FAST,
     contents: prompt,
     config: {
@@ -91,11 +91,14 @@ ${unitTree.join("\n")}
   return JSON.parse(res.text ?? "{}");
 }
 
-export async function detectMisconception(args: {
-  question: Pick<Question, "stem" | "options" | "answer">;
-  correct_rate: number;
-  distractor_dist: Record<string, number>;
-}): Promise<string> {
+export async function detectMisconception(
+  args: {
+    question: Pick<Question, "stem" | "options" | "answer">;
+    correct_rate: number;
+    distractor_dist: Record<string, number>;
+  },
+  apiKey?: string,
+): Promise<string> {
   const prompt = `這題答對率 ${(args.correct_rate * 100).toFixed(1)}%，錯誤選項分布：
 ${JSON.stringify(args.distractor_dist, null, 2)}
 
@@ -106,7 +109,7 @@ ${JSON.stringify(args.question, null, 2)}
 1. 學生最可能的迷思概念
 2. 建議補強教學切入點`;
 
-  const res = await client().models.generateContent({
+  const res = await client(apiKey).models.generateContent({
     model: PRO,
     contents: prompt,
   });
